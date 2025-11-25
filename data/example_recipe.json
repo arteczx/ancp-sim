@@ -1,0 +1,10 @@
+{
+  "propellant_name": "AN-Mg Test Propellant",
+  "composition": {
+    "Ammonium Nitrate": 65.0,
+    "Potassium Nitrate": 5.0,
+    "Magnesium": 15.0,
+    "Castor Oil": 7.5,
+    "Methylene Diphenyl Diisocyanate": 7.5
+  }
+}
