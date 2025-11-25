@@ -1,0 +1,38 @@
+{
+  "Ammonium Nitrate": {
+    "formula": "H4N2O3",
+    "enthalpy_formation_kJ_mol": -365.56,
+    "molecular_weight_g_mol": 80.043,
+    "density_g_cm3": 1.725
+  },
+  "Potassium Nitrate": {
+    "formula": "KNO3",
+    "enthalpy_formation_kJ_mol": -494.63,
+    "molecular_weight_g_mol": 101.1032,
+    "density_g_cm3": 2.109
+  },
+  "Castor Oil": {
+    "formula": "C57H104O9",
+    "enthalpy_formation_kJ_mol": -2265.0,
+    "molecular_weight_g_mol": 932.45,
+    "density_g_cm3": 0.961
+  },
+  "Methylene Diphenyl Diisocyanate": {
+    "formula": "C15H10N2O2",
+    "enthalpy_formation_kJ_mol": -142.0,
+    "molecular_weight_g_mol": 250.25,
+    "density_g_cm3": 1.19
+  },
+  "Magnesium": {
+    "formula": "Mg",
+    "enthalpy_formation_kJ_mol": 0,
+    "molecular_weight_g_mol": 24.305,
+    "density_g_cm3": 1.738
+  },
+  "Ferric Oxide": {
+    "formula": "Fe2O3",
+    "enthalpy_formation_kJ_mol": -824.2,
+    "molecular_weight_g_mol": 159.69,
+    "density_g_cm3": 5.24
+  }
+}
