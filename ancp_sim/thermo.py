@@ -20,24 +20,12 @@ def calculate_thermo(recipe, ingredients_db, config, chamber_pressure_bar=70):
                 'thermo': {'model': 'constant-cp', 'h0': h0_j_kmol, 's0': 0.0, 'cp0': 0.0}
             }))
 
-    # Define the set of elements present in the reactants
-    reactant_elements = set()
-    for name, pct in recipe.items():
-        if pct > 0:
-            formula = ingredients_db[name]['formula']
-            elements_in_ingredient = parse_formula(formula).keys()
-            reactant_elements.update(elements_in_ingredient)
+    # Define standard product species (both gas and condensed)
+    gas_species = ct.Species.list_from_file('nasa_gas.yaml')
+    condensed_species = ct.Species.list_from_file('nasa_condensed.yaml')
+    product_species = gas_species + condensed_species
 
-    # Filter product species to only include those containing reactant elements
-    all_gas_species = ct.Species.list_from_file('nasa_gas.yaml')
-    all_condensed_species = ct.Species.list_from_file('nasa_condensed.yaml')
-
-    product_species = [
-        s for s in (all_gas_species + all_condensed_species)
-        if set(s.composition.keys()).issubset(reactant_elements)
-    ]
-
-    # Create the Solution object with the filtered species list
+    # Create the Solution object, which will model a multiphase mixture
     gas = ct.Solution(thermo='IdealGas', species=reactant_species + product_species)
 
     # 2. Set the initial state to the unburned reactants
