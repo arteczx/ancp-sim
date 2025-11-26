@@ -13,13 +13,13 @@
   },
   "Castor Oil": {
     "formula": "C57H104O9",
-    "enthalpy_formation_kJ_mol": -2265.0,
+    "enthalpy_formation_kJ_mol": -1330.0,
     "molecular_weight_g_mol": 932.45,
     "density_g_cm3": 0.961
   },
   "Methylene Diphenyl Diisocyanate": {
     "formula": "C15H10N2O2",
-    "enthalpy_formation_kJ_mol": -142.0,
+    "enthalpy_formation_kJ_mol": -100.0,
     "molecular_weight_g_mol": 250.25,
     "density_g_cm3": 1.19
   },

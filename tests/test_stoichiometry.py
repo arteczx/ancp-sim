@@ -44,7 +44,7 @@ class TestStoichiometry(unittest.TestCase):
         self.assertAlmostEqual(results['elemental_moles']['K'], 0.049, places=3)
         self.assertAlmostEqual(results['elemental_moles']['Mg'], 0.617, places=3)
         self.assertAlmostEqual(results['elemental_moles']['C'], 0.908, places=3)
-        self.assertAlmostEqual(results['reactant_enthalpy_kJ_100g'], -343.8, places=1)
+        self.assertAlmostEqual(results['reactant_enthalpy_kJ_100g'], -335.0, places=1)
         self.assertAlmostEqual(results['oxygen_balance_percent'], -40.4087, places=4) # Increased precision
 
 if __name__ == '__main__':
