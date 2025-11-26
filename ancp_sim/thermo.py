@@ -3,10 +3,9 @@ import numpy as np
 import math
 from .stoichiometry import parse_formula
 
-def calculate_thermo(recipe, ingredients_db, chamber_pressure_bar=70):
+def calculate_thermo(recipe, ingredients_db, config, chamber_pressure_bar=70):
     """
-    Calculates thermodynamic properties by directly adapting the logic from
-    a known working Cantera example (adiabatic.py).
+    Calculates thermodynamic properties, including ideal and delivered performance.
     """
     # 1. Create a gas object with all possible species (reactants and products)
     # This is the core insight from the working example.
@@ -21,10 +20,24 @@ def calculate_thermo(recipe, ingredients_db, chamber_pressure_bar=70):
             'thermo': {'model': 'constant-cp', 'h0': h0_j_kmol, 's0': 0.0, 'cp0': 0.0}
         }))
 
-    # Define standard product species
-    product_species = ct.Species.list_from_file('nasa_gas.yaml')
+    # Define the set of elements present in the reactants
+    reactant_elements = set()
+    for name, pct in recipe.items():
+        if pct > 0:
+            formula = ingredients_db[name]['formula']
+            elements_in_ingredient = parse_formula(formula).keys()
+            reactant_elements.update(elements_in_ingredient)
 
-    # Create the single gas object
+    # Filter product species to only include those containing reactant elements
+    all_gas_species = ct.Species.list_from_file('nasa_gas.yaml')
+    all_condensed_species = ct.Species.list_from_file('nasa_condensed.yaml')
+
+    product_species = [
+        s for s in (all_gas_species + all_condensed_species)
+        if set(s.composition.keys()).issubset(reactant_elements)
+    ]
+
+    # Create the Solution object with the filtered species list
     gas = ct.Solution(thermo='IdealGas', species=reactant_species + product_species)
 
     # 2. Set the initial state to the unburned reactants
@@ -53,12 +66,21 @@ def calculate_thermo(recipe, ingredients_db, chamber_pressure_bar=70):
     term2 = (2 / (gamma + 1))**((gamma + 1) / (gamma - 1))
 
     cf_vacuum = math.sqrt(term1 * term2)
-    isp_sec = cf_vacuum * c_star / g0
+    isp_sec_ideal = cf_vacuum * c_star / g0
+
+    # 6. Apply efficiency factors for delivered performance
+    efficiencies = config.get("efficiencies", {})
+    combustion_eff = efficiencies.get("combustion_efficiency", 1.0)
+    nozzle_eff = efficiencies.get("nozzle_efficiency", 1.0)
+    two_phase_eff = efficiencies.get("two_phase_efficiency", 1.0)
+
+    isp_sec_delivered = isp_sec_ideal * combustion_eff * nozzle_eff * two_phase_eff
 
     return {
         't_flame_K': T_flame,
         'gamma': gamma,
         'product_molecular_weight_g_mol': M_products * 1000,
         'c_star_m_s': c_star,
-        'isp_vacuum_sec': isp_sec
+        'isp_vacuum_sec_ideal': isp_sec_ideal,
+        'isp_vacuum_sec_delivered': isp_sec_delivered
     }

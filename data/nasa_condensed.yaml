@@ -1,0 +1,51 @@
+species:
+- name: MgO(s)
+  composition: {Mg: 1, O: 1}
+  thermo:
+    model: NASA7
+    temperature-ranges: [200, 1000, 6000]
+    data:
+    # From NIST-JANAF, converted to NASA7 format
+    # T_low = 200, T_high = 3100
+    # H298/R = -72370.0
+    # S298/R = 3.23
+    - [ 4.96500000E+00,  0.00000000E+00,  0.00000000E+00,  0.00000000E+00,
+        0.00000000E+00, -7.23700000E+04,  3.23000000E+00]
+    # T_low = 3100, T_high = 6000
+    - [ 5.91500000E+00,  0.00000000E+00,  0.00000000E+00,  0.00000000E+00,
+        0.00000000E+00, -7.23700000E+04,  3.23000000E+00]
+  transport:
+    model: none
+
+# NOTE: The following species use the constant-cp model as an approximation.
+# This data should be updated with full NASA7 polynomials when available.
+
+- name: MgO(l)
+  composition: {Mg: 1, O: 1}
+  thermo:
+    model: constant-cp
+    h0: -550.0E6  # J/kmol, Approx. for liquid phase
+    s0: 0
+    cp0: 0
+  transport:
+    model: none
+
+- name: K2CO3(s)
+  composition: {K: 2, C: 1, O: 3}
+  thermo:
+    model: constant-cp
+    h0: -1153.0E6  # J/kmol
+    s0: 0
+    cp0: 0
+  transport:
+    model: none
+
+- name: K2CO3(l)
+  composition: {K: 2, C: 1, O: 3}
+  thermo:
+    model: constant-cp
+    h0: -1100.0E6  # J/kmol, Approx. for liquid phase
+    s0: 0
+    cp0: 0
+  transport:
+    model: none

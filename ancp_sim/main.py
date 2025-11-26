@@ -4,28 +4,36 @@ from ancp_sim.chemdb import load_ingredients
 from ancp_sim.stoichiometry import calculate_stoichiometry
 from ancp_sim.thermo import calculate_thermo
 from ancp_sim.config import load_config
+import ancp_sim.output as output
+
+def apply_catalyst_logic(recipe_composition, config):
+    """
+    Checks for a catalyst in the recipe and applies a burn rate multiplier if found.
+    """
+    ferric_oxide_pct = recipe_composition.get("Ferric Oxide", 0.0)
+    if ferric_oxide_pct > 1.0:
+        multiplier = config.get("catalyst", {}).get("ferric_oxide_multiplier", 1.0)
+        original_a = config["burn_rate"]["a"]
+        config["burn_rate"]["a"] *= multiplier
+        print(f"\n--- Catalyst Logic Applied ---")
+        print(f"Ferric Oxide detected at {ferric_oxide_pct}%.")
+        print(f"Burn rate coefficient 'a' modified: {original_a} -> {config['burn_rate']['a']}")
+        print("----------------------------\n")
+    return config
 
 def main():
     parser = argparse.ArgumentParser(description="ANCP-Sim: Ammonium Nitrate Chemical Propulsion Simulator")
     parser.add_argument('recipe_file', type=str, help="Path to the propellant recipe file (e.g., recipe.json)")
-    parser.add_argument('--config', type=str, default='config.ini', help="Path to the configuration file")
+    parser.add_argument('--config', type=str, default='config.json', help="Path to the configuration file")
     parser.add_argument('--pc', type=float, default=70.0, help="Chamber pressure in bar")
 
     args = parser.parse_args()
 
-    print("--- ANCP-Sim Initialized ---")
+    output.print_banner()
 
     # Load configuration
     config = load_config(args.config)
-    print(f"Loaded configuration from: {args.config}")
-    for section in config.sections():
-        print(f"[{section}]")
-        for key, val in config.items(section):
-            print(f"  {key} = {val}")
-
-    print(f"Recipe File: {args.recipe_file}")
-    print(f"Chamber Pressure: {args.pc} bar")
-    print("----------------------------")
+    output.print_inputs(args.config, args.recipe_file, args.pc)
 
     # Load the chemical database
     ingredients_db = load_ingredients()
@@ -43,26 +51,24 @@ def main():
         print(f"Error: The recipe file {args.recipe_file} is not a valid JSON file.")
         return
 
-    # Calculate stoichiometry
+    # Apply catalyst logic
+    composition = recipe_data.get("composition", {})
+    config = apply_catalyst_logic(composition, config)
+
+    # Run calculations and print results
     try:
-        composition = recipe_data.get("composition", {})
+        # Stoichiometry
         stoichiometry_results = calculate_stoichiometry(composition, ingredients_db)
+        output.print_stoichiometry(recipe_data.get('propellant_name', 'N/A'), stoichiometry_results)
 
-        print("\n--- Stoichiometry Results ---")
-        print(f"Propellant: {recipe_data.get('propellant_name', 'N/A')}")
-        print(json.dumps(stoichiometry_results, indent=2))
-        print("-----------------------------\n")
-
-        # Calculate thermodynamics
+        # Thermodynamics
         thermo_results = calculate_thermo(
             composition,
             ingredients_db,
+            config,
             chamber_pressure_bar=args.pc
         )
-
-        print("\n--- Thermodynamic Results (Cantera) ---")
-        print(json.dumps(thermo_results, indent=2))
-        print("---------------------------------------\n")
+        output.print_thermo(thermo_results)
 
     except ValueError as e:
         print(f"Error during calculation: {e}")
