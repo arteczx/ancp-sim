@@ -8,17 +8,17 @@ def calculate_thermo(recipe, ingredients_db, config, chamber_pressure_bar=70):
     Calculates thermodynamic properties, including ideal and delivered performance.
     """
     # 1. Create a gas object with all possible species (reactants and products)
-    # This is the core insight from the working example.
 
     # Define custom reactant species
     reactant_species = []
     for name, data in ingredients_db.items():
-        composition_dict = parse_formula(data['formula'])
-        h0_j_kmol = data['enthalpy_formation_kJ_mol'] * 1_000_000
-        reactant_species.append(ct.Species.from_dict({
-            'name': name.replace(" ", "_"), 'composition': composition_dict,
-            'thermo': {'model': 'constant-cp', 'h0': h0_j_kmol, 's0': 0.0, 'cp0': 0.0}
-        }))
+        if recipe.get(name, 0) > 0: # Only add species that are in the recipe
+            composition_dict = parse_formula(data['formula'])
+            h0_j_kmol = data['enthalpy_formation_kJ_mol'] * 1_000_000
+            reactant_species.append(ct.Species.from_dict({
+                'name': name.replace(" ", "_"), 'composition': composition_dict,
+                'thermo': {'model': 'constant-cp', 'h0': h0_j_kmol, 's0': 0.0, 'cp0': 0.0}
+            }))
 
     # Define standard product species (both gas and condensed)
     gas_species = ct.Species.list_from_file('nasa_gas.yaml')
