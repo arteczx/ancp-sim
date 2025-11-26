@@ -4,6 +4,22 @@ from ancp_sim.chemdb import load_ingredients
 from ancp_sim.stoichiometry import calculate_stoichiometry
 from ancp_sim.thermo import calculate_thermo
 from ancp_sim.config import load_config
+import ancp_sim.output as output
+
+def apply_catalyst_logic(recipe_composition, config):
+    """
+    Checks for a catalyst in the recipe and applies a burn rate multiplier if found.
+    """
+    ferric_oxide_pct = recipe_composition.get("Ferric Oxide", 0.0)
+    if ferric_oxide_pct > 1.0:
+        multiplier = config.get("catalyst", {}).get("ferric_oxide_multiplier", 1.0)
+        original_a = config["burn_rate"]["a"]
+        config["burn_rate"]["a"] *= multiplier
+        print(f"\n--- Catalyst Logic Applied ---")
+        print(f"Ferric Oxide detected at {ferric_oxide_pct}%.")
+        print(f"Burn rate coefficient 'a' modified: {original_a} -> {config['burn_rate']['a']}")
+        print("----------------------------\n")
+    return config
 
 def apply_catalyst_logic(recipe_composition, config):
     """
@@ -28,7 +44,7 @@ def main():
 
     args = parser.parse_args()
 
-    print("--- ANCP-Sim Initialized ---")
+    output.print_banner()
 
     # Load configuration
     config = load_config(args.config)
@@ -62,23 +78,16 @@ def main():
     # Calculate stoichiometry
     try:
         stoichiometry_results = calculate_stoichiometry(composition, ingredients_db)
+        output.print_stoichiometry(recipe_data.get('propellant_name', 'N/A'), stoichiometry_results)
 
-        print("\n--- Stoichiometry Results ---")
-        print(f"Propellant: {recipe_data.get('propellant_name', 'N/A')}")
-        print(json.dumps(stoichiometry_results, indent=2))
-        print("-----------------------------\n")
-
-        # Calculate thermodynamics
+        # Thermodynamics
         thermo_results = calculate_thermo(
             composition,
             ingredients_db,
             config,
             chamber_pressure_bar=args.pc
         )
-
-        print("\n--- Thermodynamic Results (Cantera) ---")
-        print(json.dumps(thermo_results, indent=2))
-        print("---------------------------------------\n")
+        output.print_thermo(thermo_results)
 
     except ValueError as e:
         print(f"Error during calculation: {e}")
