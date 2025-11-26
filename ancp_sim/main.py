@@ -5,10 +5,25 @@ from ancp_sim.stoichiometry import calculate_stoichiometry
 from ancp_sim.thermo import calculate_thermo
 from ancp_sim.config import load_config
 
+def apply_catalyst_logic(recipe_composition, config):
+    """
+    Checks for a catalyst in the recipe and applies a burn rate multiplier if found.
+    """
+    ferric_oxide_pct = recipe_composition.get("Ferric Oxide", 0.0)
+    if ferric_oxide_pct > 1.0:
+        multiplier = config.get("catalyst", {}).get("ferric_oxide_multiplier", 1.0)
+        original_a = config["burn_rate"]["a"]
+        config["burn_rate"]["a"] *= multiplier
+        print(f"\n--- Catalyst Logic Applied ---")
+        print(f"Ferric Oxide detected at {ferric_oxide_pct}%.")
+        print(f"Burn rate coefficient 'a' modified: {original_a} -> {config['burn_rate']['a']}")
+        print("----------------------------\n")
+    return config
+
 def main():
     parser = argparse.ArgumentParser(description="ANCP-Sim: Ammonium Nitrate Chemical Propulsion Simulator")
     parser.add_argument('recipe_file', type=str, help="Path to the propellant recipe file (e.g., recipe.json)")
-    parser.add_argument('--config', type=str, default='config.ini', help="Path to the configuration file")
+    parser.add_argument('--config', type=str, default='config.json', help="Path to the configuration file")
     parser.add_argument('--pc', type=float, default=70.0, help="Chamber pressure in bar")
 
     args = parser.parse_args()
@@ -18,10 +33,7 @@ def main():
     # Load configuration
     config = load_config(args.config)
     print(f"Loaded configuration from: {args.config}")
-    for section in config.sections():
-        print(f"[{section}]")
-        for key, val in config.items(section):
-            print(f"  {key} = {val}")
+    print(json.dumps(config, indent=2))
 
     print(f"Recipe File: {args.recipe_file}")
     print(f"Chamber Pressure: {args.pc} bar")
@@ -43,9 +55,12 @@ def main():
         print(f"Error: The recipe file {args.recipe_file} is not a valid JSON file.")
         return
 
+    # Apply catalyst logic
+    composition = recipe_data.get("composition", {})
+    config = apply_catalyst_logic(composition, config)
+
     # Calculate stoichiometry
     try:
-        composition = recipe_data.get("composition", {})
         stoichiometry_results = calculate_stoichiometry(composition, ingredients_db)
 
         print("\n--- Stoichiometry Results ---")
@@ -57,6 +72,7 @@ def main():
         thermo_results = calculate_thermo(
             composition,
             ingredients_db,
+            config,
             chamber_pressure_bar=args.pc
         )
 
