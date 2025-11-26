@@ -21,6 +21,21 @@ def apply_catalyst_logic(recipe_composition, config):
         print("----------------------------\n")
     return config
 
+def apply_catalyst_logic(recipe_composition, config):
+    """
+    Checks for a catalyst in the recipe and applies a burn rate multiplier if found.
+    """
+    ferric_oxide_pct = recipe_composition.get("Ferric Oxide", 0.0)
+    if ferric_oxide_pct > 1.0:
+        multiplier = config.get("catalyst", {}).get("ferric_oxide_multiplier", 1.0)
+        original_a = config["burn_rate"]["a"]
+        config["burn_rate"]["a"] *= multiplier
+        print(f"\n--- Catalyst Logic Applied ---")
+        print(f"Ferric Oxide detected at {ferric_oxide_pct}%.")
+        print(f"Burn rate coefficient 'a' modified: {original_a} -> {config['burn_rate']['a']}")
+        print("----------------------------\n")
+    return config
+
 def main():
     parser = argparse.ArgumentParser(description="ANCP-Sim: Ammonium Nitrate Chemical Propulsion Simulator")
     parser.add_argument('recipe_file', type=str, help="Path to the propellant recipe file (e.g., recipe.json)")
@@ -33,7 +48,12 @@ def main():
 
     # Load configuration
     config = load_config(args.config)
-    output.print_inputs(args.config, args.recipe_file, args.pc)
+    print(f"Loaded configuration from: {args.config}")
+    print(json.dumps(config, indent=2))
+
+    print(f"Recipe File: {args.recipe_file}")
+    print(f"Chamber Pressure: {args.pc} bar")
+    print("----------------------------")
 
     # Load the chemical database
     ingredients_db = load_ingredients()
@@ -55,9 +75,8 @@ def main():
     composition = recipe_data.get("composition", {})
     config = apply_catalyst_logic(composition, config)
 
-    # Run calculations and print results
+    # Calculate stoichiometry
     try:
-        # Stoichiometry
         stoichiometry_results = calculate_stoichiometry(composition, ingredients_db)
         output.print_stoichiometry(recipe_data.get('propellant_name', 'N/A'), stoichiometry_results)
 
